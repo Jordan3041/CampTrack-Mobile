@@ -147,11 +147,19 @@ export function startSyncEngine() {
     const nowOnline = !!state.isConnected && state.isInternetReachable !== false;
     if (nowOnline && !isOnline) {
       // The device's network interface just came back — worth trying to
-      // drain the queue, though reportNetworkOk()/Unreachable() (driven by
-      // actual API call outcomes, see above) are what the banner itself
-      // trusts, since the device can be "connected" while the API isn't
-      // actually reachable.
+      // drain the queue. Also clears the banner immediately rather than
+      // waiting for the next screen to make a network call, since a
+      // reconnect with nothing queued would otherwise never touch the API.
+      reportNetworkOk();
       processQueue();
+    } else if (!nowOnline && isOnline) {
+      // Surfaces a device-level disconnect (airplane mode, no signal, etc.)
+      // right away, without waiting for something to actually try — and
+      // still, this is only ever a secondary signal: reportNetworkOk()/
+      // Unreachable() driven by real API call outcomes (see above) are
+      // what the banner ultimately trusts, since the device can read
+      // "connected" while the API itself isn't actually reachable.
+      reportNetworkUnreachable();
     }
     isOnline = nowOnline;
   });

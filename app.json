@@ -2,7 +2,7 @@
   "expo": {
     "name": "CampTrack",
     "slug": "CampTrack-Mobile",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "camptrackmobile",
@@ -11,6 +11,7 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.anonymous.CampTrack-Mobile",
+      "buildNumber": "3",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "CampTrack uses your location to show local weather, log campsite coordinates, and get directions.",
         "NSPhotoLibraryUsageDescription": "CampTrack needs access to your photos so you can attach them to campsites.",
@@ -25,7 +26,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -56,7 +60,8 @@
         {
           "photosPermission": "CampTrack needs access to your photos so you can attach them to campsites."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

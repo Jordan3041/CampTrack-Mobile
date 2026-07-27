@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Image, Linking, Pressable, Text, View } from "react-native";
 
@@ -20,11 +21,13 @@ type Site = Omit<api.Campsite, "lat" | "lng"> & { lat: number; lng: number };
 export function SiteDetailSheet({
   site,
   alreadySaved,
+  isOwnSite = false,
   onClose,
   onSaved,
 }: {
   site: Site | null;
   alreadySaved: boolean;
+  isOwnSite?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -33,6 +36,12 @@ export function SiteDetailSheet({
   const [saved, setSaved] = useState(alreadySaved);
 
   if (!site) return <FormModal visible={false} title="" onClose={onClose}><View /></FormModal>;
+
+  // Server-relative "/uploads/..." paths need resolving to a full URL for
+  // <Image> to load them on native — see resolvePhotoUrl(). This also
+  // filters out any empty entries, so the row only ever renders when
+  // there's a real photo to show.
+  const photos = (site.photos || []).map((p) => api.resolvePhotoUrl(p)).filter(Boolean);
 
   async function addToMine() {
     setSaving(true);
@@ -65,6 +74,17 @@ export function SiteDetailSheet({
 
   return (
     <FormModal visible={!!site} title={site.name} onClose={onClose}>
+      {!isOwnSite && site.ownerUsername ? (
+        <Pressable
+          onPress={() => {
+            onClose();
+            router.push(`/(app)/user/${site.ownerUsername}`);
+          }}
+          className="flex-row items-center gap-1.5 mb-1.5">
+          <Icon name="user" size={13} color="#5BD46B" />
+          <Text className="text-lime text-xs">Posted by @{site.ownerUsername}</Text>
+        </Pressable>
+      ) : null}
       <Text className="text-stone text-sm">{[site.state, siteTypeLabel(site.siteType)].filter(Boolean).join(" · ")}</Text>
       {!!site.rating && (
         <View className="mt-1.5">
@@ -100,22 +120,31 @@ export function SiteDetailSheet({
         <Icon name="openLink" size={13} color="#5BD46B" />
       </Pressable>
       {site.notes ? <Text className="text-ink text-sm mt-2">{site.notes}</Text> : null}
-      {(site.photos || []).length > 0 && (
+      {photos.length > 0 && (
         <View className="flex-row flex-wrap gap-2 mt-2.5">
-          {site.photos!.slice(0, 4).map((p, i) => (
+          {photos.slice(0, 4).map((p, i) => (
             <Image key={i} source={{ uri: p }} style={{ width: 72, height: 72, borderRadius: 10 }} />
           ))}
         </View>
       )}
       <View className="mt-4 mb-2">
-        <Button
-          title={saved ? "In your campsites" : "Add to my campsites"}
-          icon={saved ? "check" : "add"}
-          variant={saved ? "ghost" : "primary"}
-          disabled={saved}
-          loading={saving}
-          onPress={addToMine}
-        />
+        {isOwnSite ? (
+          <>
+            <Button title="This is your campsite" icon="check" variant="ghost" disabled />
+            <Text className="text-stone text-xs mt-1.5">
+              You made this campsite public — it's already in your own campsites list.
+            </Text>
+          </>
+        ) : (
+          <Button
+            title={saved ? "In your campsites" : "Add to my campsites"}
+            icon={saved ? "check" : "add"}
+            variant={saved ? "ghost" : "primary"}
+            disabled={saved}
+            loading={saving}
+            onPress={addToMine}
+          />
+        )}
       </View>
     </FormModal>
   );

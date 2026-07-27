@@ -19,6 +19,7 @@ import {
 export {
   // session
   getToken,
+  resolvePhotoUrl,
   currentUser,
   currentFirstName,
   currentIsAdmin,
@@ -34,12 +35,14 @@ export {
   // auth
   register,
   login,
+  loginWithGoogle,
   getMe,
   updateProfile,
   forgotPassword,
   resetPassword,
   verifyEmail,
   resendVerification,
+  deleteAccount,
   // campsite sharing/cloning (already network-required — clone needs a live lookup of the source)
   cloneCampsite,
   getSharedCampsite,
@@ -47,6 +50,7 @@ export {
   getTripSuggestions,
   // explore/map data
   getPublicCampsites,
+  getPublicProfile,
   getCampflareCampgrounds,
   getCampflareCampground,
   getCampflareCampsites,
@@ -94,6 +98,7 @@ export type {
   Settings,
   Rig,
   AssistantMessage,
+  PublicProfile,
 } from "./rawApi";
 
 /* ---------- campsites (offline-capable) ---------- */

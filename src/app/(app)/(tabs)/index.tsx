@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon, WeatherIcon } from "@/components/ui/Icon";
 import { FormModal } from "@/components/ui/Modal";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { fmtDate, tripStatus } from "@/lib/dates";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -299,19 +300,22 @@ export default function DashboardScreen() {
     })();
   }, []);
 
-  useEffect(() => {
-    api.getTrips().then(setTrips).catch((e) => setTripsError(e.message));
-  }, []);
+  // Re-fetch every time this tab regains focus (not just on first mount) —
+  // otherwise a trip created while on the Trips tab never appears here,
+  // since Tabs screens stay mounted and a mount-only effect never reruns.
+  useFocusEffect(
+    useCallback(() => {
+      api.getTrips().then(setTrips).catch((e) => setTripsError(e.message));
 
-  useEffect(() => {
-    Promise.all([api.getCampsites(), api.getTrips(), api.getMaintenance()])
-      .then(([campsitesRes, allTrips, maintenance]) => {
-        setCampsites(campsitesRes);
-        const past = allTrips.filter((t) => tripStatus(t) === "past").length;
-        setStats({ campsites: campsitesRes.length, past, upcoming: allTrips.length - past, maintenance: maintenance.length });
-      })
-      .catch((e) => setStatsError(e.message));
-  }, []);
+      Promise.all([api.getCampsites(), api.getTrips(), api.getMaintenance()])
+        .then(([campsitesRes, allTrips, maintenance]) => {
+          setCampsites(campsitesRes);
+          const past = allTrips.filter((t) => tripStatus(t) === "past").length;
+          setStats({ campsites: campsitesRes.length, past, upcoming: allTrips.length - past, maintenance: maintenance.length });
+        })
+        .catch((e) => setStatsError(e.message));
+    }, [])
+  );
 
   const upcoming = (trips || []).filter((t) => tripStatus(t) !== "past").slice(0, 5);
   const soonestTrip = upcoming.length ? upcoming[0] : null;
@@ -362,6 +366,7 @@ export default function DashboardScreen() {
                   <Text className="text-stone text-xs">
                     Packing: {packed}/{total} packed
                   </Text>
+                  {total > 0 && <ProgressBar value={packed} total={total} />}
                 </View>
               </View>
             );

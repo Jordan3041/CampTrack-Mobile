@@ -211,7 +211,7 @@ export function CampsiteForm({
       <View className="flex-row flex-wrap gap-2 mt-2">
         {photos.map((p, i) => (
           <View key={i} className="relative">
-            <Image source={{ uri: p }} style={{ width: 84, height: 84, borderRadius: 10 }} />
+            <Image source={{ uri: api.resolvePhotoUrl(p) }} style={{ width: 84, height: 84, borderRadius: 10 }} />
             <Pressable
               onPress={() => setPhotos((arr) => arr.filter((_, idx) => idx !== i))}
               className="absolute -top-1.5 -right-1.5 bg-danger rounded-full w-6 h-6 items-center justify-center">

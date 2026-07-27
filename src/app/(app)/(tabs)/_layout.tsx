@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
+import { HeaderLogo } from "@/components/HeaderLogo";
 import { Icon, IconName } from "@/components/ui/Icon";
 
 // Mirrors the desktop sidebar nav in CampTrack (renderSidebar in js/ui.js),
@@ -22,6 +23,7 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: "#171C18" },
         headerTintColor: "#F2F5F1",
         headerShadowVisible: false,
+        headerLeft: (props) => <HeaderLogo canGoBack={props.canGoBack} />,
         tabBarStyle: { backgroundColor: "#12160F", borderTopColor: "rgba(255,255,255,0.10)" },
         tabBarActiveTintColor: "#7BE88A",
         tabBarInactiveTintColor: "#9BA69C",

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Image, Linking, Modal, Pressable, Share, Text, View } from "react-native";
 
 import { CampsiteForm } from "@/components/campsites/CampsiteForm";
@@ -62,7 +63,11 @@ export default function CampsitesScreen() {
     api.getCampsites().then(setSites).catch((e) => setError(e.message));
   }, []);
 
-  useEffect(load, [load]);
+  // Re-fetch on every focus, not just first mount — Tabs screens stay
+  // mounted when you switch away, so a campsite saved elsewhere (e.g. from
+  // Explore's "Add to my campsites") would otherwise never show up here
+  // until the app restarts.
+  useFocusEffect(load);
 
   async function handleShare(id: string) {
     const url = `${CT_CONFIG.WEB_ORIGIN}/shared/campsite/${id}`;
@@ -176,11 +181,14 @@ export default function CampsitesScreen() {
               {s.notes ? <Text className="text-ink text-sm mt-2">{s.notes}</Text> : null}
               {(s.photos || []).length > 0 && (
                 <View className="flex-row flex-wrap gap-2 mt-2.5">
-                  {s.photos!.map((p, i) => (
-                    <Pressable key={i} onPress={() => setLightbox(p)}>
-                      <Image source={{ uri: p }} style={{ width: 84, height: 84, borderRadius: 10 }} />
-                    </Pressable>
-                  ))}
+                  {s.photos!.map((p, i) => {
+                    const url = api.resolvePhotoUrl(p);
+                    return (
+                      <Pressable key={i} onPress={() => setLightbox(url)}>
+                        <Image source={{ uri: url }} style={{ width: 84, height: 84, borderRadius: 10 }} />
+                      </Pressable>
+                    );
+                  })}
                 </View>
               )}
             </Card>

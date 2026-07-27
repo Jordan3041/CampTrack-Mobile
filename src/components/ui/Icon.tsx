@@ -65,6 +65,8 @@ export const ICONS = {
   info: [ION, "information-circle-outline"],
   refresh: [ION, "refresh"],
   send: [ION, "send"],
+  user: [ION, "person-circle-outline"],
+  friends: [MCI, "account-group-outline"],
 } as const;
 
 export type IconName = keyof typeof ICONS;

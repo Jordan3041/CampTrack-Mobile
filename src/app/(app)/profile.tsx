@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, TextInput, View } from "react-native";
 
 import { EMPTY_RIG, RigForm } from "@/components/RigForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/Icon";
 import { Screen } from "@/components/ui/Screen";
 import { Select } from "@/components/ui/Select";
 import { SwitchRow } from "@/components/ui/SwitchRow";
@@ -30,6 +31,9 @@ export default function ProfileScreen() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [savingRig, setSavingRig] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -90,6 +94,17 @@ export default function ProfileScreen() {
       toast(e.message);
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  async function deleteAccount() {
+    setDeletingAccount(true);
+    try {
+      await api.deleteAccount();
+      await logout();
+    } catch (e: any) {
+      toast(e.message);
+      setDeletingAccount(false);
     }
   }
 
@@ -182,6 +197,54 @@ export default function ProfileScreen() {
           <Button title="Save settings" onPress={saveSettings} loading={savingSettings} />
         </View>
       </Card>
+
+      <View className="p-3.5 border border-danger rounded-sm mb-4">
+        <View className="flex-row items-center gap-1.5 mb-1">
+          <Icon name="warning" size={16} color="#E0673C" />
+          <Text className="font-display text-base text-danger">Danger zone</Text>
+        </View>
+        {!showDeleteConfirm ? (
+          <>
+            <Text className="text-ink text-sm mb-2">
+              Permanently deletes your account and every campsite, trip, and maintenance record you own. This cannot be undone.
+            </Text>
+            <Button title="Delete my account" icon="trash" variant="danger" size="sm" onPress={() => setShowDeleteConfirm(true)} />
+          </>
+        ) : (
+          <>
+            <Text className="text-ink text-sm mb-1">
+              Type <Text className="font-mono font-body-bold">{session?.username}</Text> to confirm
+            </Text>
+            <TextInput
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder={session?.username || ""}
+              placeholderTextColor="#6d766e"
+              autoCapitalize="none"
+              className="font-mono text-ink border border-line rounded-sm px-3 py-2 bg-white/[0.04] mb-2"
+            />
+            <View className="flex-row gap-2">
+              <Button
+                title="Cancel"
+                variant="ghost"
+                size="sm"
+                onPress={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmText("");
+                }}
+              />
+              <Button
+                title="Permanently delete my account"
+                variant="danger"
+                size="sm"
+                disabled={deleteConfirmText !== session?.username}
+                loading={deletingAccount}
+                onPress={deleteAccount}
+              />
+            </View>
+          </>
+        )}
+      </View>
 
       <Button title="Sign out" variant="danger" onPress={() => logout()} />
     </Screen>

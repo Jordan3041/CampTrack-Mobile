@@ -1,3 +1,4 @@
+import { GoogleSignin, isErrorWithCode, statusCodes } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
@@ -8,6 +9,7 @@ import { PasswordChecklist } from "@/components/PasswordChecklist";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { useAuth } from "@/lib/auth";
+import { CT_CONFIG } from "@/lib/config";
 import { isPasswordValid } from "@/lib/password-policy";
 
 type Mode = "login" | "register";
@@ -15,8 +17,9 @@ type Mode = "login" | "register";
 // Mirrors CampTrack/index.html + js/auth.js — tabbed login/register card.
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -25,6 +28,28 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  async function doGoogleSignIn() {
+    setError("");
+    setGoogleSubmitting(true);
+    try {
+      GoogleSignin.configure({ webClientId: CT_CONFIG.GOOGLE_CLIENT_ID });
+      await GoogleSignin.hasPlayServices();
+      const result = await GoogleSignin.signIn();
+      if (result.type !== "success" || !result.data.idToken) {
+        throw new Error("Google didn't return a sign-in token. Please try again.");
+      }
+      await loginWithGoogle(result.data.idToken);
+    } catch (e: any) {
+      if (isErrorWithCode(e) && e.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User backed out of the Google sheet — not an error worth surfacing.
+      } else {
+        setError(e.message || "Google sign-in failed. Please try again.");
+      }
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  }
 
   async function doSubmit() {
     setError("");
@@ -133,11 +158,7 @@ export default function LoginScreen() {
               <View className="flex-1 h-px bg-line" />
             </View>
 
-            <Button
-              title="Continue with Google"
-              variant="ghost"
-              onPress={() => setError("Google sign-in isn't set up yet in this build.")}
-            />
+            <Button title="Continue with Google" variant="ghost" loading={googleSubmitting} onPress={doGoogleSignIn} />
             <View className="h-2.5" />
             <Button
               title="Continue with Apple *Coming Soon*"

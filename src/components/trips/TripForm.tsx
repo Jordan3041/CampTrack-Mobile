@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -31,6 +31,21 @@ export function TripForm({
   const [location, setLocation] = useState(trip?.location || "");
   const [notes, setNotes] = useState(trip?.notes || "");
   const [saving, setSaving] = useState(false);
+
+  // FormModal stays mounted the whole time (only its `visible` prop
+  // toggles), so the useState initializers above only ever run once —
+  // without this, reopening for a different trip (or for "+ Trip" after
+  // editing one) would keep showing whatever was filled in the first time
+  // the form ever opened instead of that trip's actual details.
+  useEffect(() => {
+    if (!visible) return;
+    setTitle(trip?.title || "");
+    setStart(trip?.start || "");
+    setEnd(trip?.end || "");
+    setCampsiteId(trip?.campsiteId || "");
+    setLocation(trip?.location || "");
+    setNotes(trip?.notes || "");
+  }, [visible, trip]);
 
   function handleCampsiteChange(id: string) {
     setCampsiteId(id);

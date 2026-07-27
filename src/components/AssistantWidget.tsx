@@ -94,7 +94,7 @@ export function AssistantWidget() {
     return (
       <Pressable
         onPress={() => setOpen(true)}
-        className="absolute bottom-24 right-5 w-14 h-14 rounded-full bg-lime items-center justify-center"
+        className="absolute bottom-28 right-5 w-14 h-14 rounded-full bg-lime items-center justify-center"
         style={{ elevation: 6, shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
         <Icon name="chat" size={24} color="#0B0F0B" />
       </Pressable>
@@ -104,7 +104,7 @@ export function AssistantWidget() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="absolute bottom-24 right-4 left-4 max-w-[420px] self-end"
+      className="absolute bottom-28 right-4 left-4 max-w-[420px] self-end"
       style={{ height: "70%", maxHeight: 520 }}>
       <View className="flex-1 bg-surface-2 border border-glass-border rounded-md overflow-hidden">
         <View className="flex-row items-center justify-between px-4 py-3 bg-pine/50 border-b border-glass-border">

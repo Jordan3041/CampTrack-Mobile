@@ -21,10 +21,30 @@ const IS_VERIFIED_KEY = "ct_is_verified";
 const CAN_DELETE_USERS_KEY = "ct_can_delete_users";
 
 export function apiBase() {
+  // Lets a dev build point at the live camptrack.org API/DB instead of
+  // localhost — set EXPO_PUBLIC_USE_LIVE_API=1 (e.g. in .env.local) and
+  // restart Metro, since Expo inlines EXPO_PUBLIC_* vars at bundle time.
+  if (process.env.EXPO_PUBLIC_USE_LIVE_API === "1") return CT_CONFIG.API_BASE;
   // Android emulator loopback quirk — real devices/iOS use the same host.
   if (__DEV__ && Platform.OS === "android") return CT_CONFIG.LOCAL_API_BASE.replace("localhost", "10.0.2.2");
   if (__DEV__) return CT_CONFIG.LOCAL_API_BASE;
   return CT_CONFIG.API_BASE;
+}
+
+// Photo URLs come back from the server as server-relative paths like
+// "/uploads/123/photo.jpg" — the web app can use those as-is (the browser
+// resolves them against the page's own origin), but React Native's
+// <Image> has no such notion of "current origin" and needs a full URL, so
+// they'd otherwise silently fail to load. Already-absolute URIs (a freshly
+// picked device photo not yet uploaded, a data: URL, etc.) pass through
+// unchanged. /uploads is served from the same origin as /api (see
+// CampTrack/server/server.js), so stripping the "/api" suffix off
+// apiBase() gives the right host for whichever backend (local or live)
+// the app is currently pointed at.
+export function resolvePhotoUrl(path?: string | null): string {
+  if (!path) return "";
+  if (/^(https?:|file:|data:|ph:|content:|assets-library:)/i.test(path)) return path;
+  return apiBase().replace(/\/api\/?$/, "") + path;
 }
 
 async function getItem(key: string) {
@@ -110,7 +130,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     throw new NetworkUnavailableError("Can't reach the CampTrack server. Is it running?");
   }
 
-  if (res.status === 401 && path !== "/auth/login" && path !== "/auth/register") {
+  if (res.status === 401 && path !== "/auth/login" && path !== "/auth/register" && path !== "/auth/google") {
     await clearSession();
     throw new SessionExpiredError("Session expired");
   }
@@ -142,6 +162,14 @@ export async function login(username: string, password: string) {
   await setSession(data.username, data.token, data.firstName, data.isAdmin, data.isVerified, data.canDeleteUsers);
   return data;
 }
+// Google's own Identity Services JWT is passed straight through as
+// `credential` — mirrors CampTrack/js/auth.js's handleGoogleCredential(),
+// which POSTs the same shape to the same /auth/google endpoint.
+export async function loginWithGoogle(idToken: string) {
+  const data: AuthResponse = await apiFetch("/auth/google", { method: "POST", body: JSON.stringify({ credential: idToken }) });
+  await setSession(data.username, data.token, data.firstName, data.isAdmin, data.isVerified, data.canDeleteUsers);
+  return data;
+}
 export type Me = { username: string; firstName: string; lastName: string; email: string; isAdmin: boolean; isVerified: boolean; canDeleteUsers: boolean };
 export function getMe(): Promise<Me> {
   return apiFetch("/auth/me");
@@ -160,6 +188,13 @@ export function verifyEmail(token: string) {
 }
 export function resendVerification(): Promise<{ ok: boolean; alreadyVerified?: boolean; sentTo?: string }> {
   return apiFetch("/auth/resend-verification", { method: "POST" });
+}
+// Deletes the signed-in user's own account (server cascades to every
+// related row — campsites, trips, maintenance, settings, etc.) and clears
+// the local session so the app falls back to the sign-in screen.
+export async function deleteAccount() {
+  await apiFetch("/auth/account", { method: "DELETE" });
+  await clearSession();
 }
 
 /* ---------- campsites ---------- */
@@ -187,6 +222,8 @@ export type Campsite = {
   cellTmobile?: number | null;
   cellAtt?: number | null;
   createdAt?: string;
+  ownerUsername?: string;
+  ownerAvatarUrl?: string;
 };
 export function networkGetCampsites(): Promise<Campsite[]> {
   return apiFetch("/campsites");
@@ -303,6 +340,18 @@ export function networkDeleteMaintenanceReminder(id: string) {
 /* ---------- public campsites (explore map) ---------- */
 export function getPublicCampsites() {
   return apiFetch("/public/campsites");
+}
+
+export type PublicProfile = {
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+  rig: Rig | null;
+  campsites: Campsite[];
+};
+export function getPublicProfile(username: string): Promise<PublicProfile> {
+  return apiFetch(`/public/profile/${encodeURIComponent(username)}`);
 }
 export function getCampflareCampgrounds(params?: Record<string, string>) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";

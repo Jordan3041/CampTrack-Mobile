@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import MapView, { Geojson, Marker, Region } from "react-native-maps";
+import MapView, { Callout, Geojson, Marker, Region } from "react-native-maps";
 
 import dumpStationsData from "@/assets/data/dump-stations.json";
 import { FilterSheet, DEFAULT_FILTERS, ExploreFilters } from "@/components/explore/FilterSheet";
+import { MapLegend } from "@/components/explore/MapLegend";
 import { SiteDetailSheet } from "@/components/explore/SiteDetailSheet";
 import { StatsStrip } from "@/components/explore/StatsStrip";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +39,7 @@ export default function ExploreScreen() {
   const mapRef = useRef<MapView>(null);
   const [allSites, setAllSites] = useState<Site[]>([]);
   const [myCoords, setMyCoords] = useState<Set<string>>(new Set());
+  const [myIds, setMyIds] = useState<Set<string>>(new Set());
   const [count, setCount] = useState("Loading public campsites…");
   const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -75,6 +77,7 @@ export default function ExploreScreen() {
       try {
         const mine = await api.getCampsites();
         setMyCoords(new Set(mine.filter((s) => s.lat && s.lng).map((s) => coordKey(Number(s.lat), Number(s.lng)))));
+        setMyIds(new Set(mine.filter((s) => s.id).map((s) => s.id!)));
       } catch (_) {}
     })();
   }, []);
@@ -207,6 +210,14 @@ export default function ExploreScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ridbStandard, ridbRv, ridbCabin, ridbFcfs]);
 
+  const legendEntries = useMemo(() => {
+    const entries: { color: string; label: string }[] = [{ color: "#5BD46B", label: "Public campsites" }];
+    if (dumpOn) entries.push({ color: "#8a6d3b", label: "Dump stations" });
+    if (wildfireOn) entries.push({ color: "#C0392B", label: "Active wildfires" });
+    if (ridbOn) entries.push({ color: "#3B6FA0", label: "Federal campgrounds" });
+    return entries;
+  }, [dumpOn, wildfireOn, ridbOn]);
+
   const landsByAgency = useMemo(() => {
     const groups = new Map<string, any[]>();
     for (const f of landsFeatures) {
@@ -244,8 +255,13 @@ export default function ExploreScreen() {
               key={s.id}
               coordinate={{ latitude: Number(s.lat), longitude: Number(s.lng) }}
               pinColor="#5BD46B"
-              onPress={() => setSelectedSite(s)}
-            />
+              onPress={() => setSelectedSite(s)}>
+              {/* Empty Callout child suppresses MapKit's default empty-title
+                  bubble — the tap is handled by SiteDetailSheet instead. */}
+              <Callout tooltip pointerEvents="none">
+                <View />
+              </Callout>
+            </Marker>
           ))}
 
         {dumpOn &&
@@ -299,11 +315,14 @@ export default function ExploreScreen() {
           })}
       </MapView>
 
+      <MapLegend entries={legendEntries} />
+
       <FilterSheet visible={filtersOpen} filters={filters} states={states} onChange={setFilters} onClose={() => setFiltersOpen(false)} />
 
       <SiteDetailSheet
         site={selectedSite}
         alreadySaved={selectedSite ? myCoords.has(coordKey(Number(selectedSite.lat), Number(selectedSite.lng))) : false}
+        isOwnSite={selectedSite ? !!selectedSite.id && myIds.has(selectedSite.id) : false}
         onClose={() => setSelectedSite(null)}
         onSaved={() => {
           if (selectedSite) setMyCoords((prev) => new Set(prev).add(coordKey(Number(selectedSite.lat), Number(selectedSite.lng))));
@@ -402,10 +421,24 @@ function LayersSheet({
       <Text className="text-stone text-[11px] -mt-1 mb-1">Data from Recreation.gov</Text>
       {ridbOn && (
         <View className="flex-row flex-wrap gap-x-4 gap-y-1 mb-2">
-          <SwitchRow label="Standard campsites" value={ridbStandard} onChange={onRidbStandardChange} />
-          <SwitchRow label="RV sites only" value={ridbRv} onChange={onRidbRvChange} />
-          <SwitchRow label="Cabins & lodging" value={ridbCabin} onChange={onRidbCabinChange} />
-          <SwitchRow label="First-come, first-served" value={ridbFcfs} onChange={onRidbFcfsChange} />
+          {/* SwitchRow's label relies on flex-1 to claim the width left over
+              after the Switch — inside a flex-wrap row, an unconstrained
+              child has no definite width for that flex-1 to resolve against
+              (same class of bug fixed in Modal.tsx's maxHeight), so the
+              label collapsed instead of showing. A fixed percentage width
+              per item gives it something concrete to measure against. */}
+          <View style={{ width: "48%" }}>
+            <SwitchRow label="Standard campsites" value={ridbStandard} onChange={onRidbStandardChange} />
+          </View>
+          <View style={{ width: "48%" }}>
+            <SwitchRow label="RV sites only" value={ridbRv} onChange={onRidbRvChange} />
+          </View>
+          <View style={{ width: "48%" }}>
+            <SwitchRow label="Cabins & lodging" value={ridbCabin} onChange={onRidbCabinChange} />
+          </View>
+          <View style={{ width: "48%" }}>
+            <SwitchRow label="First-come, first-served" value={ridbFcfs} onChange={onRidbFcfsChange} />
+          </View>
         </View>
       )}
 

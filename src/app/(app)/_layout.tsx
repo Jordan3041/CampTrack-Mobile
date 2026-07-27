@@ -1,17 +1,15 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AssistantWidget } from "@/components/AssistantWidget";
+import { HeaderLogo } from "@/components/HeaderLogo";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
 export default function AppLayout() {
   return (
     <View style={{ flex: 1 }}>
-      <SafeAreaView edges={["top"]} className="bg-surface">
-        <OfflineBanner />
-      </SafeAreaView>
+      <OfflineBanner />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -19,6 +17,7 @@ export default function AppLayout() {
           headerStyle: { backgroundColor: "#171C18" },
           headerTintColor: "#F2F5F1",
           headerShadowVisible: false,
+          headerLeft: (props) => <HeaderLogo canGoBack={props.canGoBack} />,
         }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="profile" options={{ headerShown: true, title: "Profile" }} />
@@ -28,6 +27,7 @@ export default function AppLayout() {
         <Stack.Screen name="calendar" options={{ headerShown: true, title: "Calendar" }} />
         <Stack.Screen name="maintenance" options={{ headerShown: true, title: "Maintenance" }} />
         <Stack.Screen name="activities" options={{ headerShown: true, title: "Activities" }} />
+        <Stack.Screen name="user/[username]" options={{ headerShown: true, title: "Profile" }} />
       </Stack>
       <AssistantWidget />
     </View>

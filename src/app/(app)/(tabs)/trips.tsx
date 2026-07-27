@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Text, View } from "react-native";
 
 import { PackingModal } from "@/components/trips/PackingModal";
@@ -79,7 +80,10 @@ export default function TripsScreen() {
       .catch((e) => setError(e.message));
   }, []);
 
-  useEffect(load, [load]);
+  // Re-fetch on every focus, not just first mount — otherwise a campsite
+  // created (or edited) after this tab was already visited once would
+  // never show up in the trip form's campsite picker until app restart.
+  useFocusEffect(load);
 
   async function handleDelete(id: string) {
     Alert.alert("Delete trip", "Delete this trip and its packing list?", [
