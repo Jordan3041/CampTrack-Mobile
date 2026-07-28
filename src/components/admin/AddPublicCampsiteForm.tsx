@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 import { Button } from "@/components/ui/Button";
 import { FormModal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
@@ -76,14 +77,35 @@ export function AddPublicCampsiteForm({ visible, onClose, onSaved }: { visible: 
       {locationType === "gps" && (
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <TextField label="Latitude" placeholder="44.4280" value={lat} onChangeText={setLat} keyboardType="numeric" />
+            <TextField
+              label="Latitude"
+              placeholder="44.4280"
+              value={lat}
+              onChangeText={setLat}
+              keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+            />
           </View>
           <View className="flex-1">
-            <TextField label="Longitude" placeholder="-110.5885" value={lng} onChangeText={setLng} keyboardType="numeric" />
+            <TextField
+              label="Longitude"
+              placeholder="-110.5885"
+              value={lng}
+              onChangeText={setLng}
+              keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+            />
           </View>
         </View>
       )}
-      {locationType === "address" && <TextField label="Address" value={address} onChangeText={setAddress} />}
+      {locationType === "address" && (
+        <AddressAutocomplete
+          label="Address"
+          value={address}
+          onChangeText={setAddress}
+          onSelect={(s) => {
+            if (s.state && US_STATES.includes(s.state)) setState(s.state);
+          }}
+        />
+      )}
       {locationType === "name" && <TextField label="Location name" value={locationName} onChangeText={setLocationName} />}
 
       <Select

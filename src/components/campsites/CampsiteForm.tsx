@@ -1,7 +1,8 @@
 import * as Location from "expo-location";
 import React, { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Platform, Pressable, Text, View } from "react-native";
 
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { FormModal } from "@/components/ui/Modal";
@@ -140,10 +141,22 @@ export function CampsiteForm({
         <View>
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <TextField label="Latitude" placeholder="44.4280" value={lat} onChangeText={setLat} keyboardType="numeric" />
+              <TextField
+                label="Latitude"
+                placeholder="44.4280"
+                value={lat}
+                onChangeText={setLat}
+                keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+              />
             </View>
             <View className="flex-1">
-              <TextField label="Longitude" placeholder="-110.5885" value={lng} onChangeText={setLng} keyboardType="numeric" />
+              <TextField
+                label="Longitude"
+                placeholder="-110.5885"
+                value={lng}
+                onChangeText={setLng}
+                keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+              />
             </View>
           </View>
           <View className="mt-1">
@@ -152,7 +165,15 @@ export function CampsiteForm({
         </View>
       )}
       {locationType === "address" && (
-        <TextField label="Address" placeholder="123 Lakeside Rd, Marquette, MI" value={address} onChangeText={setAddress} />
+        <AddressAutocomplete
+          label="Address"
+          placeholder="123 Lakeside Rd, Marquette, MI"
+          value={address}
+          onChangeText={setAddress}
+          onSelect={(s) => {
+            if (s.state && US_STATES.includes(s.state)) setState(s.state);
+          }}
+        />
       )}
       {locationType === "name" && (
         <TextField label="Location name" placeholder="North shore of Bear Lake" value={locationName} onChangeText={setLocationName} />

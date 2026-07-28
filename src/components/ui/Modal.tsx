@@ -31,7 +31,9 @@ export function FormModal({
                 <Icon name="close" size={22} color="#9BA69C" />
               </Pressable>
             </View>
-            <ScrollView className="px-5 pb-5">{children}</ScrollView>
+            <ScrollView className="px-5 pb-5" keyboardShouldPersistTaps="handled">
+              {children}
+            </ScrollView>
           </View>
         </Pressable>
       </Pressable>

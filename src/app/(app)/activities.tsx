@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
 import MapView, { Marker, Polyline, Region } from "react-native-maps";
 
 import { Button } from "@/components/ui/Button";
@@ -182,10 +182,22 @@ export default function ActivitiesScreen() {
             <Button title="Use my current location" icon="location" onPress={useMyLocationFishing} />
             <View className="flex-row gap-3 mt-3">
               <View className="flex-1">
-                <TextField label="Latitude" placeholder="44.9778" value={fishLat} onChangeText={setFishLat} keyboardType="numeric" />
+                <TextField
+                  label="Latitude"
+                  placeholder="44.9778"
+                  value={fishLat}
+                  onChangeText={setFishLat}
+                  keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+                />
               </View>
               <View className="flex-1">
-                <TextField label="Longitude" placeholder="-93.2650" value={fishLng} onChangeText={setFishLng} keyboardType="numeric" />
+                <TextField
+                  label="Longitude"
+                  placeholder="-93.2650"
+                  value={fishLng}
+                  onChangeText={setFishLng}
+                  keyboardType={Platform.OS === "ios" ? "numbers-and-punctuation" : "numeric"}
+                />
               </View>
             </View>
             <View className="mt-1">

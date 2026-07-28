@@ -1,3 +1,4 @@
+import * as Location from "expo-location";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import MapView, { Callout, Geojson, Marker, Region } from "react-native-maps";
@@ -8,6 +9,7 @@ import { MapLegend } from "@/components/explore/MapLegend";
 import { SiteDetailSheet } from "@/components/explore/SiteDetailSheet";
 import { StatsStrip } from "@/components/explore/StatsStrip";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { FormModal } from "@/components/ui/Modal";
 import { SwitchRow } from "@/components/ui/SwitchRow";
 import * as api from "@/lib/api";
@@ -45,6 +47,7 @@ export default function ExploreScreen() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
 
   const [dumpOn, setDumpOn] = useState(false);
   const [wildfireOn, setWildfireOn] = useState(false);
@@ -65,6 +68,24 @@ export default function ExploreScreen() {
   const [ridbCampgrounds, setRidbCampgrounds] = useState<api.RidbCampground[]>([]);
   const [ridbStatus, setRidbStatus] = useState("");
   const ridbFetchToken = useRef(0);
+
+  useEffect(() => {
+    Location.requestForegroundPermissionsAsync().then(({ status }) => setLocationEnabled(status === "granted"));
+  }, []);
+
+  async function centerOnMe() {
+    const perm = await Location.requestForegroundPermissionsAsync();
+    if (perm.status !== "granted") {
+      toast("Couldn't get your location");
+      return;
+    }
+    setLocationEnabled(true);
+    const pos = await Location.getCurrentPositionAsync({});
+    mapRef.current?.animateToRegion(
+      { latitude: pos.coords.latitude, longitude: pos.coords.longitude, latitudeDelta: 0.2, longitudeDelta: 0.2 },
+      500
+    );
+  }
 
   useEffect(() => {
     (async () => {
@@ -247,7 +268,9 @@ export default function ExploreScreen() {
         ref={mapRef}
         style={{ flex: 1 }}
         initialRegion={INITIAL_REGION}
-        onRegionChangeComplete={onRegionChangeComplete}>
+        onRegionChangeComplete={onRegionChangeComplete}
+        showsUserLocation={locationEnabled}
+        showsMyLocationButton={false}>
         {filteredSites
           .filter((s) => s.lat && s.lng)
           .map((s) => (
@@ -316,6 +339,24 @@ export default function ExploreScreen() {
       </MapView>
 
       <MapLegend entries={legendEntries} />
+
+      <Pressable
+        onPress={centerOnMe}
+        style={{
+          position: "absolute",
+          right: 12,
+          bottom: 12,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          backgroundColor: "rgba(23,28,24,0.92)",
+          borderWidth: 1,
+          borderColor: "rgba(255,255,255,0.12)",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+        <Icon name="location" size={20} color="#5BD46B" />
+      </Pressable>
 
       <FilterSheet visible={filtersOpen} filters={filters} states={states} onChange={setFilters} onClose={() => setFiltersOpen(false)} />
 

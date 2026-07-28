@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { BrandMark } from "@/components/BrandMark";
 import { Icon } from "@/components/ui/Icon";
@@ -26,7 +26,10 @@ export function HeaderLogo({ canGoBack }: { canGoBack?: boolean }) {
           <Icon name="chevronRight" size={22} color="#F2F5F1" style={{ transform: [{ rotate: "180deg" }] }} />
         </Pressable>
       )}
-      <BrandMark size={30} variant="light" />
+      <BrandMark size={36} variant="light" />
+      <Text className="font-display text-lg text-ink">
+        Camp<Text className="text-lime">Track</Text>
+      </Text>
     </View>
   );
 }
