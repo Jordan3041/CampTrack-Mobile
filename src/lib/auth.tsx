@@ -15,6 +15,7 @@ type AuthContextValue = {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithApple: (idToken: string, firstName?: string | null, lastName?: string | null) => Promise<void>;
   register: (username: string, password: string, email: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -56,6 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       loginWithGoogle: async (idToken) => {
         await api.loginWithGoogle(idToken);
+        await load();
+      },
+      loginWithApple: async (idToken, firstName, lastName) => {
+        await api.loginWithApple(idToken, firstName, lastName);
         await load();
       },
       register: async (username, password, email, firstName, lastName) => {

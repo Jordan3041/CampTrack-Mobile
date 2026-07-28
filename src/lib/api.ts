@@ -36,6 +36,7 @@ export {
   register,
   login,
   loginWithGoogle,
+  loginWithApple,
   getMe,
   updateProfile,
   forgotPassword,

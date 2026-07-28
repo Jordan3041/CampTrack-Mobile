@@ -130,7 +130,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     throw new NetworkUnavailableError("Can't reach the CampTrack server. Is it running?");
   }
 
-  if (res.status === 401 && path !== "/auth/login" && path !== "/auth/register" && path !== "/auth/google") {
+  if (res.status === 401 && path !== "/auth/login" && path !== "/auth/register" && path !== "/auth/google" && path !== "/auth/apple") {
     await clearSession();
     throw new SessionExpiredError("Session expired");
   }
@@ -167,6 +167,18 @@ export async function login(username: string, password: string) {
 // which POSTs the same shape to the same /auth/google endpoint.
 export async function loginWithGoogle(idToken: string) {
   const data: AuthResponse = await apiFetch("/auth/google", { method: "POST", body: JSON.stringify({ credential: idToken }) });
+  await setSession(data.username, data.token, data.firstName, data.isAdmin, data.isVerified, data.canDeleteUsers);
+  return data;
+}
+// Apple only ever includes the person's name in the on-device credential the
+// very first time they sign in — never inside the identity token itself, and
+// never again on later sign-ins — so the caller passes it along here if it
+// has it. Mirrors the /auth/apple body shape server/src/routes/auth.js expects.
+export async function loginWithApple(idToken: string, firstName?: string | null, lastName?: string | null) {
+  const data: AuthResponse = await apiFetch("/auth/apple", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken, firstName: firstName || undefined, lastName: lastName || undefined }),
+  });
   await setSession(data.username, data.token, data.firstName, data.isAdmin, data.isVerified, data.canDeleteUsers);
   return data;
 }

@@ -1,6 +1,7 @@
 import { GoogleSignin, isErrorWithCode, statusCodes } from "@react-native-google-signin/google-signin";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,9 +18,11 @@ type Mode = "login" | "register";
 // Mirrors CampTrack/index.html + js/auth.js — tabbed login/register card.
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, loginWithApple } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  const [appleSubmitting, setAppleSubmitting] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -29,11 +32,38 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    // Apple's guidelines require hiding the button entirely rather than
+    // showing a disabled/error state — it's Android and pre-13 iOS that
+    // never support this, not a config problem like Google's.
+    AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+  }, []);
+
+  async function doAppleSignIn() {
+    setError("");
+    setAppleSubmitting(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      });
+      if (!credential.identityToken) {
+        throw new Error("Apple didn't return a sign-in token. Please try again.");
+      }
+      await loginWithApple(credential.identityToken, credential.fullName?.givenName, credential.fullName?.familyName);
+    } catch (e: any) {
+      if (e.code !== "ERR_REQUEST_CANCELED") {
+        setError(e.message || "Apple sign-in failed. Please try again.");
+      }
+    } finally {
+      setAppleSubmitting(false);
+    }
+  }
+
   async function doGoogleSignIn() {
     setError("");
     setGoogleSubmitting(true);
     try {
-      GoogleSignin.configure({ webClientId: CT_CONFIG.GOOGLE_CLIENT_ID });
+      GoogleSignin.configure({ webClientId: CT_CONFIG.GOOGLE_CLIENT_ID, iosClientId: CT_CONFIG.GOOGLE_IOS_CLIENT_ID });
       await GoogleSignin.hasPlayServices();
       const result = await GoogleSignin.signIn();
       if (result.type !== "success" || !result.data.idToken) {
@@ -43,6 +73,10 @@ export default function LoginScreen() {
     } catch (e: any) {
       if (isErrorWithCode(e) && e.code === statusCodes.SIGN_IN_CANCELLED) {
         // User backed out of the Google sheet — not an error worth surfacing.
+      } else if (typeof e.message === "string" && e.message.includes("failed to determine clientID")) {
+        // Google's SDK needs an iOS-type OAuth client (GoogleService-Info.plist
+        // or configure({ iosClientId })) — not yet set up for this build.
+        setError("Google sign-in isn't set up yet in this build.");
       } else {
         setError(e.message || "Google sign-in failed. Please try again.");
       }
@@ -159,12 +193,22 @@ export default function LoginScreen() {
             </View>
 
             <Button title="Continue with Google" variant="ghost" loading={googleSubmitting} onPress={doGoogleSignIn} />
-            <View className="h-2.5" />
-            <Button
-              title="Continue with Apple *Coming Soon*"
-              variant="ghost"
-              onPress={() => setError("Apple sign-in isn't set up yet in this build.")}
-            />
+            {appleAvailable && (
+              <>
+                <View className="h-2.5" />
+                {appleSubmitting ? (
+                  <Button title="Continue with Apple" variant="ghost" loading />
+                ) : (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                    cornerRadius={8}
+                    style={{ height: 44 }}
+                    onPress={doAppleSignIn}
+                  />
+                )}
+              </>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
