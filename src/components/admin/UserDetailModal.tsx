@@ -22,6 +22,7 @@ type AdminUser = {
   isAdmin: boolean;
   isProtectedAdmin: boolean;
   canDeleteUsers: boolean;
+  isSuspended: boolean;
   counts: { campsites: number; trips: number; maintenance: number };
 };
 
@@ -74,6 +75,17 @@ export function UserDetailModal({
       await api.adminSetIsAdmin(user!.id, next);
       setUser((u) => (u ? { ...u, isAdmin: next } : u));
       toast(next ? "Admin access granted" : "Admin access revoked");
+      onChanged();
+    } catch (e: any) {
+      toast(e.message);
+    }
+  }
+
+  async function toggleSuspended(next: boolean) {
+    try {
+      await api.adminSetSuspended(user!.id, next);
+      setUser((u) => (u ? { ...u, isSuspended: next } : u));
+      toast(next ? "Account suspended" : "Account unsuspended");
       onChanged();
     } catch (e: any) {
       toast(e.message);
@@ -166,6 +178,18 @@ export function UserDetailModal({
         <Text className="text-stone text-sm">You can't revoke your own admin access from here — ask another admin.</Text>
       ) : (
         <SwitchRow label="Admin access" value={user.isAdmin} onChange={toggleAdmin} />
+      )}
+
+      <Text className="font-display text-base text-ink mt-4 mb-1">Account status</Text>
+      {isSelf ? (
+        <Text className="text-stone text-sm">You can't suspend your own account from here.</Text>
+      ) : (
+        <>
+          <SwitchRow label="Suspended" value={user.isSuspended} onChange={toggleSuspended} />
+          <Text className="text-stone text-xs mt-1">
+            Suspending blocks login immediately, and signs them out of any active session on their very next request. They'll be told to contact support@camptrack.org.
+          </Text>
+        </>
       )}
 
       <Text className="font-display text-base text-ink mt-4 mb-1">Password help</Text>

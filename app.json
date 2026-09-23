@@ -9,12 +9,13 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0E120F",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.CampTrackCampTrack-Mobile2026",
+      "buildNumber": "15",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "CampTrack uses your location to show nearby campsites, local weather conditions, and stream gauge data on the Explorer map, plus log campsite coordinates and get directions.",
         "NSPhotoLibraryUsageDescription": "CampTrack needs access to your photos so you can attach them to campsites.",
-        "NSPhotoLibraryAddUsageDescription": "CampTrack can save photos you take of campsites."
+        "NSPhotoLibraryAddUsageDescription": "CampTrack can save photos you take of campsites.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -37,6 +38,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withPodfileModularHeaders",
       [
         "expo-splash-screen",
         {

@@ -49,6 +49,14 @@ function AssistantMessageText({ text }: { text: string }) {
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
 
+// Client-side throttle only — a UX nicety so a fast typer gets immediate
+// feedback instead of a round-trip 429. The actual security boundary is
+// the backend limiter on /api/assistant/chat, since this can trivially be
+// bypassed by calling the API directly.
+const SEND_MIN_INTERVAL_MS = 4000;
+const SEND_WINDOW_MS = 3 * 60 * 1000;
+const SEND_WINDOW_MAX = 5;
+
 // Mirrors initAssistantWidget()/buildAssistantWidget() in CampTrack/js/ui.js
 // — a floating chat bubble, only present at all for a signed-in, verified
 // user with AI features enabled and Gemini configured server-side.
@@ -63,6 +71,7 @@ export function AssistantWidget() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const sendTimestamps = useRef<number[]>([]);
 
   useEffect(() => {
     if (!session?.isVerified) return;
@@ -78,8 +87,24 @@ export function AssistantWidget() {
   if (!session?.isVerified || !available) return null;
 
   async function send() {
+    if (sending) return;
     const message = input.trim();
     if (!message) return;
+
+    const now = Date.now();
+    const recent = sendTimestamps.current.filter((t) => now - t < SEND_WINDOW_MS);
+    const last = recent[recent.length - 1];
+    if (last && now - last < SEND_MIN_INTERVAL_MS) {
+      setMessages((m) => [...m, { role: "assistant", text: "You're sending messages a bit fast — give it a second." }]);
+      return;
+    }
+    if (recent.length >= SEND_WINDOW_MAX) {
+      setMessages((m) => [...m, { role: "assistant", text: "You've sent a lot of messages recently — try again in a few minutes." }]);
+      return;
+    }
+    recent.push(now);
+    sendTimestamps.current = recent;
+
     setInput("");
     setSending(true);
     const history = messages.slice(-8).map((m) => ({ role: m.role, text: m.text }));
@@ -140,6 +165,7 @@ export function AssistantWidget() {
             placeholder="Ask something…"
             placeholderTextColor="#6d766e"
             maxLength={2000}
+            editable={!sending}
             onSubmitEditing={send}
             className="flex-1 bg-white/5 border border-line rounded-full px-4 py-2 text-ink"
           />

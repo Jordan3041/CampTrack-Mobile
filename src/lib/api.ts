@@ -64,6 +64,7 @@ export {
   adminSendResetLink,
   adminForceReset,
   adminSetCanDeleteUsers,
+  adminSetSuspended,
   adminDeleteUser,
   adminGetIntegrations,
   adminSyncIntegration,

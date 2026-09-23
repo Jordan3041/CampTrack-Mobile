@@ -440,6 +440,9 @@ export function adminForceReset(id: string) {
 export function adminSetCanDeleteUsers(id: string, canDeleteUsers: boolean) {
   return apiFetch(`/admin/users/${id}/delete-permission`, { method: "PUT", body: JSON.stringify({ canDeleteUsers }) });
 }
+export function adminSetSuspended(id: string, isSuspended: boolean) {
+  return apiFetch(`/admin/users/${id}/suspend`, { method: "PUT", body: JSON.stringify({ isSuspended }) });
+}
 export function adminDeleteUser(id: string) {
   return apiFetch(`/admin/users/${id}`, { method: "DELETE" });
 }
