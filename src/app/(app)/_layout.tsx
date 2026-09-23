@@ -23,7 +23,6 @@ export default function AppLayout() {
         <Stack.Screen name="profile" options={{ headerShown: true, title: "Profile" }} />
         <Stack.Screen name="help" options={{ headerShown: true, title: "Help" }} />
         <Stack.Screen name="admin" options={{ headerShown: true, title: "Admin" }} />
-        <Stack.Screen name="map" options={{ headerShown: true, title: "Map" }} />
         <Stack.Screen name="calendar" options={{ headerShown: true, title: "Calendar" }} />
         <Stack.Screen name="maintenance" options={{ headerShown: true, title: "Maintenance" }} />
         <Stack.Screen name="activities" options={{ headerShown: true, title: "Activities" }} />

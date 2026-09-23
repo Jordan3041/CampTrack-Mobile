@@ -104,8 +104,26 @@ export default function TripsScreen() {
     ]);
   }
 
-  const upcoming = (trips || []).filter((t) => tripStatus(t) !== "past");
-  const past = (trips || []).filter((t) => tripStatus(t) === "past").reverse();
+  // Group every trip (upcoming and past alike) into Month/Year buckets,
+  // newest month first — each trip's per-row Badge still carries the
+  // active/upcoming/past status, so grouping by date doesn't lose that.
+  const monthGroups = (() => {
+    const all = (trips || []).slice().sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime());
+    const map = new Map<string, { label: string; sortKey: number; trips: api.Trip[] }>();
+    for (const t of all) {
+      const d = new Date(t.start);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          label: d.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+          sortKey: d.getFullYear() * 12 + d.getMonth(),
+          trips: [],
+        });
+      }
+      map.get(key)!.trips.push(t);
+    }
+    return [...map.values()].sort((a, b) => b.sortKey - a.sortKey);
+  })();
 
   return (
     <Screen>
@@ -120,41 +138,30 @@ export default function TripsScreen() {
         <Text className="text-danger">{error}</Text>
       ) : trips === null ? (
         <ActivityIndicator color="#5BD46B" className="mt-4" />
+      ) : monthGroups.length === 0 ? (
+        <Card>
+          <EmptyState icon="trips">No trips yet — plan your next escape.</EmptyState>
+        </Card>
       ) : (
-        <>
-          <Card>
-            <Text className="font-display text-lg text-ink mb-1">Upcoming & current</Text>
-            {upcoming.length === 0 ? (
-              <EmptyState icon="trips">No upcoming trips yet — plan your next escape.</EmptyState>
-            ) : (
-              upcoming.map((t) => (
-                <TripRow
-                  key={t.id}
-                  trip={t}
-                  onPack={() => setPackingTrip(t)}
-                  onEdit={() => setFormTrip(t)}
-                  onDelete={() => handleDelete(t.id!)}
-                />
-              ))
-            )}
+        monthGroups.map((group) => (
+          <Card key={group.label}>
+            <View className="flex-row items-center gap-2 mb-1">
+              <Text className="font-display text-lg text-ink">{group.label}</Text>
+              <View className="bg-lime-dim rounded-full px-2 py-0.5">
+                <Text className="text-lime-bright text-[11px] font-body-bold">{group.trips.length}</Text>
+              </View>
+            </View>
+            {group.trips.map((t) => (
+              <TripRow
+                key={t.id}
+                trip={t}
+                onPack={() => setPackingTrip(t)}
+                onEdit={() => setFormTrip(t)}
+                onDelete={() => handleDelete(t.id!)}
+              />
+            ))}
           </Card>
-          <Card>
-            <Text className="font-display text-lg text-ink mb-1">Past trips</Text>
-            {past.length === 0 ? (
-              <EmptyState icon="trips">Past trips will collect here.</EmptyState>
-            ) : (
-              past.map((t) => (
-                <TripRow
-                  key={t.id}
-                  trip={t}
-                  onPack={() => setPackingTrip(t)}
-                  onEdit={() => setFormTrip(t)}
-                  onDelete={() => handleDelete(t.id!)}
-                />
-              ))
-            )}
-          </Card>
-        </>
+        ))
       )}
 
       <TripForm

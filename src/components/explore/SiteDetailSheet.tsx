@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/Icon";
 import { FormModal } from "@/components/ui/Modal";
 import { StarsDisplay } from "@/components/ui/Stars";
 import * as api from "@/lib/api";
+import { promptNavigateTo } from "@/lib/navigation";
 import { useToast } from "@/lib/toast";
 
 function siteTypeLabel(t?: string) {
@@ -127,7 +128,15 @@ export function SiteDetailSheet({
           ))}
         </View>
       )}
-      <View className="mt-4 mb-2">
+      <View className="mt-4">
+        <Button
+          title="Navigate To"
+          icon="directions"
+          onPress={() => promptNavigateTo(site!.lat, site!.lng, site!.name)}
+        />
+      </View>
+
+      <View className="mt-2.5 mb-2">
         {isOwnSite ? (
           <>
             <Button title="This is your campsite" icon="check" variant="ghost" disabled />

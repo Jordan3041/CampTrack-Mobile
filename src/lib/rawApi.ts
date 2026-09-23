@@ -394,6 +394,32 @@ export function getRidbCampgrounds(params?: Record<string, string>): Promise<Rid
   return apiFetch(`/ridb/campgrounds${qs}`);
 }
 
+// Explore map's "Reservoir Levels" layer — a curated set of USBR/USACE/USGS
+// reservoirs (see CampTrack server's src/services/reservoirService.js for
+// which agency each one is sourced from and why). Server-cached, so this
+// is a plain GET with no query params — always returns the full curated
+// list.
+export type Reservoir = {
+  id: string;
+  name: string;
+  agency: "USBR" | "USACE" | "USGS";
+  state?: string;
+  lat: number;
+  lng: number;
+  storageAf: number | null;
+  // null for reservoirs sourced from the dynamic USGS overlay (see
+  // lib/usgs.ts's fetchReservoirStorage) — capacity isn't published live
+  // anywhere, so those never get a fabricated number, only the curated
+  // server-cached list (which was hand-verified per reservoir) has one.
+  capacityAf: number | null;
+  elevationFt: number | null;
+  percentFull: number | null;
+  lastUpdated: string;
+};
+export function getReservoirs(): Promise<Reservoir[]> {
+  return apiFetch("/reservoirs");
+}
+
 /* ---------- admin ---------- */
 export function adminGetUsers(query?: string) {
   const qs = query ? "?q=" + encodeURIComponent(query) : "";

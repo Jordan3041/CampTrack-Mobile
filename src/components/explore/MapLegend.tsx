@@ -11,7 +11,10 @@ export function MapLegend({ entries }: { entries: LegendEntry[] }) {
       style={{
         position: "absolute",
         left: 12,
-        bottom: 12,
+        // Nudged up from 12 — Apple Maps' required attribution/legal link
+        // sits in the map's bottom-left corner and the legend at 12 sat
+        // right on top of it.
+        bottom: 40,
         backgroundColor: "rgba(23,28,24,0.92)",
         borderRadius: 10,
         borderWidth: 1,

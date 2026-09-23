@@ -56,6 +56,7 @@ export {
   getCampflareCampground,
   getCampflareCampsites,
   getRidbCampgrounds,
+  getReservoirs,
   // admin
   adminGetUsers,
   adminGetUser,
@@ -91,6 +92,7 @@ export type {
   MaintenanceRecord,
   MaintenanceReminder,
   RidbCampground,
+  Reservoir,
   IntegrationStatus,
   FishingGauge,
   GaugeReading,

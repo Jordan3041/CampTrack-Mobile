@@ -34,7 +34,6 @@ export default function MoreScreen() {
   return (
     <Screen scroll={false}>
       <View className="mt-1">
-        <MenuRow icon="map" label="Map" onPress={() => router.push("/(app)/map")} />
         <MenuRow icon="activities" label="Activities" onPress={() => router.push("/(app)/activities")} />
         <MenuRow icon="calendar" label="Calendar" onPress={() => router.push("/(app)/calendar")} />
         <MenuRow icon="maintenance" label="RV Maintenance" onPress={() => router.push("/(app)/maintenance")} />

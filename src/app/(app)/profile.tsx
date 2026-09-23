@@ -149,7 +149,9 @@ export default function ProfileScreen() {
       </Card>
 
       <Card>
-        <Text className="font-display text-lg text-ink mb-1">Units</Text>
+        <Text className="font-display text-lg text-ink mb-1">Settings</Text>
+
+        <Text className="text-ink font-body-semibold text-[13px] mt-2 mb-1">Units</Text>
         <Select
           label="Temperature"
           value={tempUnit}
@@ -168,19 +170,16 @@ export default function ProfileScreen() {
             { label: "Kilometers", value: "km" },
           ]}
         />
-      </Card>
 
-      <Card>
-        <Text className="font-display text-lg text-ink mb-1">AI features</Text>
+        <Text className="text-ink font-body-semibold text-[13px] mt-4 mb-1">AI features</Text>
         <SwitchRow label="Smart Suggestions & CampTrack Assistant" value={aiSuggestionsEnabled} onChange={setAiSuggestionsEnabled} />
         <Text className="text-stone text-xs mt-1">
           Uses Gemini to generate a few short, personalized tips for your next trip on the dashboard (packing, weather, hookups — and
-          rig-aware, if set up above), and powers the CampTrack Assistant chat bubble. Turn this off and both disappear entirely.
+          rig-aware, if set up above), and powers the CampTrack Assistant chat bubble. Changes take effect on next launch, not
+          immediately — turn this off, restart the app, and both disappear entirely.
         </Text>
-      </Card>
 
-      <Card>
-        <Text className="font-display text-lg text-ink mb-1">Calendar</Text>
+        <Text className="text-ink font-body-semibold text-[13px] mt-4 mb-1">Calendar</Text>
         <Select
           label="Week starts on"
           value={weekStart}
@@ -193,7 +192,11 @@ export default function ProfileScreen() {
         <View className="mt-2">
           <SwitchRow label="Show past trips on calendar" value={showPastInCalendar} onChange={setShowPastInCalendar} />
         </View>
-        <View className="mt-3">
+
+        {/* Separator makes it unambiguous that this one button saves
+            everything above in this card (Units/AI/Calendar) — and only
+            this card, not Account or Your Rig above. */}
+        <View className="mt-4 pt-3 border-t border-line">
           <Button title="Save settings" onPress={saveSettings} loading={savingSettings} />
         </View>
       </Card>

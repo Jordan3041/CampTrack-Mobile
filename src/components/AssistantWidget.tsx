@@ -1,3 +1,4 @@
+import { usePathname } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
@@ -53,6 +54,7 @@ type ChatMessage = { role: "user" | "assistant"; text: string };
 // user with AI features enabled and Gemini configured server-side.
 export function AssistantWidget() {
   const { session } = useAuth();
+  const pathname = usePathname();
   const [available, setAvailable] = useState(false);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -70,6 +72,9 @@ export function AssistantWidget() {
       .catch(() => setAvailable(false));
   }, [session?.isVerified]);
 
+  // Hidden on the Explore tab only (frees up map real estate) — it stays
+  // available everywhere else the widget would normally render.
+  if (pathname.endsWith("/explore")) return null;
   if (!session?.isVerified || !available) return null;
 
   async function send() {

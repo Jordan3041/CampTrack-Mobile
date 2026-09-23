@@ -1,5 +1,5 @@
 import * as Location from "expo-location";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Platform, Pressable, Text, View } from "react-native";
 
 import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
@@ -43,19 +43,25 @@ const CELL_OPTIONS = [
 export function CampsiteForm({
   visible,
   site,
+  initialCoords,
   onClose,
   onSaved,
 }: {
   visible: boolean;
   site: api.Campsite | null;
+  // Pre-fills GPS coordinates for a brand-new campsite (e.g. the
+  // Dashboard's "Save Current Location" button) without pretending it's
+  // an edit — only applied when `site` is null; a real site's own
+  // lat/lng always wins.
+  initialCoords?: { lat: string; lng: string };
   onClose: () => void;
   onSaved: () => void;
 }) {
   const toast = useToast();
   const [name, setName] = useState(site?.name || "");
   const [locationType, setLocationType] = useState<string>(site?.locationType || "gps");
-  const [lat, setLat] = useState(site?.lat || "");
-  const [lng, setLng] = useState(site?.lng || "");
+  const [lat, setLat] = useState(site?.lat || initialCoords?.lat || "");
+  const [lng, setLng] = useState(site?.lng || initialCoords?.lng || "");
   const [address, setAddress] = useState(site?.address || "");
   const [locationName, setLocationName] = useState(site?.locationName || "");
   const [state, setState] = useState(site?.state || "");
@@ -72,6 +78,35 @@ export function CampsiteForm({
   const [cellTmobile, setCellTmobile] = useState(site?.cellTmobile != null ? String(site.cellTmobile) : "");
   const [cellAtt, setCellAtt] = useState(site?.cellAtt != null ? String(site.cellAtt) : "");
   const [saving, setSaving] = useState(false);
+
+  // FormModal stays mounted the whole time (only its `visible` prop
+  // toggles), so the useState initializers above only ever run once —
+  // without this, opening the form for an existing campsite would keep
+  // showing whatever was filled in the first time the form ever opened
+  // (usually blank, from "+ Add") instead of that campsite's actual
+  // details. Same fix as TripForm's identical effect.
+  useEffect(() => {
+    if (!visible) return;
+    setName(site?.name || "");
+    setLocationType(site?.locationType || "gps");
+    setLat(site?.lat || initialCoords?.lat || "");
+    setLng(site?.lng || initialCoords?.lng || "");
+    setAddress(site?.address || "");
+    setLocationName(site?.locationName || "");
+    setState(site?.state || "");
+    setSiteType(site?.siteType || "");
+    setRating(site?.rating || 0);
+    setHookupPower(!!site?.hookupPower);
+    setHookupWater(!!site?.hookupWater);
+    setHookupSewer(!!site?.hookupSewer);
+    setPowerAmp(site?.powerAmp || "");
+    setNotes(site?.notes || "");
+    setIsPublic(!!site?.isPublic);
+    setPhotos(site?.photos || []);
+    setCellVerizon(site?.cellVerizon != null ? String(site.cellVerizon) : "");
+    setCellTmobile(site?.cellTmobile != null ? String(site.cellTmobile) : "");
+    setCellAtt(site?.cellAtt != null ? String(site.cellAtt) : "");
+  }, [visible, site, initialCoords]);
 
   async function useMyLocation() {
     const perm = await Location.requestForegroundPermissionsAsync();

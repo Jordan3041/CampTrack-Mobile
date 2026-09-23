@@ -58,6 +58,18 @@ export async function setSingleton(name: SingletonName, value: unknown) {
   await writeJson(key(name), value);
 }
 
+/* ---------- ad hoc local-only values (never touch the sync queue) ----------
+   For device-local data that has no server counterpart at all (e.g. custom
+   campsite groups) — same per-user namespacing/wipe-on-sign-out behavior as
+   the singletons above, but outside the CollectionName/SingletonName union
+   so it can never leak into QueueTarget's exhaustive switch in sync.ts. */
+export async function getLocalValue<T>(name: string, fallback: T): Promise<T> {
+  return readJson(key(name), fallback);
+}
+export async function setLocalValue(name: string, value: unknown) {
+  await writeJson(key(name), value);
+}
+
 /* ---------- wipe on sign-out (not on sync — cache persists across sessions) ---------- */
 export async function clearOfflineDataForUser(username: string) {
   const prefix = `ct_offline_${username}_`;

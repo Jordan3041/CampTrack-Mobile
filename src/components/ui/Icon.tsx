@@ -67,6 +67,11 @@ export const ICONS = {
   send: [ION, "send"],
   user: [ION, "person-circle-outline"],
   friends: [MCI, "account-group-outline"],
+  wind: [MCI, "weather-windy"],
+  thermometer: [MCI, "thermometer"],
+  chevronDown: [ION, "chevron-down"],
+  folder: [MCI, "folder-outline"],
+  gauge: [MCI, "gauge"],
 } as const;
 
 export type IconName = keyof typeof ICONS;

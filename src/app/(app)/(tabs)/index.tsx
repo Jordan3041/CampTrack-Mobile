@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { CampsiteForm } from "@/components/campsites/CampsiteForm";
 import { EMPTY_RIG, RigForm } from "@/components/RigForm";
 import { TutorialModal } from "@/components/TutorialModal";
 import { Badge } from "@/components/ui/Badge";
@@ -34,65 +35,84 @@ type WeatherState =
   | { status: "loading" }
   | { status: "no-permission" }
   | { status: "error"; message: string }
-  | { status: "ready"; place: string; temp: number; desc: string; code: number; feelsLike: number; wind: number; windUnit: string; humidity: number; unit: string; days: { label: string; code: number; hi: number; lo: number; rain: number }[] };
+  | { status: "ready"; place: string; temp: number; desc: string; code: number; feelsLike: number; wind: number; windUnit: string; humidity: number; unit: string };
 
+// Modernized "current conditions" card — dark glass surface, oversized
+// temperature, minimal icon-driven stat chips. No multi-day forecast:
+// that section was removed from the homepage entirely per design update.
 function WeatherHero({ state }: { state: WeatherState }) {
   if (state.status === "loading") {
     return (
-      <Card className="bg-pine/40">
+      <View className="bg-[#10160f]/70 border border-white/10 rounded-[28px] p-6 mb-4 items-center">
         <ActivityIndicator color="#5BD46B" />
-      </Card>
+      </View>
     );
   }
   if (state.status === "no-permission") {
     return (
-      <Card className="bg-pine/40">
+      <View className="bg-[#10160f]/70 border border-white/10 rounded-[28px] p-6 mb-4">
         <Text className="text-[#cdd8ce]">Location access is off. Allow location to see local weather.</Text>
-      </Card>
+      </View>
     );
   }
   if (state.status === "error") {
     return (
-      <Card className="bg-pine/40">
+      <View className="bg-[#10160f]/70 border border-white/10 rounded-[28px] p-6 mb-4">
         <Text className="text-[#cdd8ce]">{state.message}</Text>
-      </Card>
+      </View>
     );
   }
   return (
-    <Card className="bg-pine/40 border-lime-dim2">
-      <Text className="font-display text-lg text-white mb-1">{state.place}</Text>
-      <View className="flex-row items-center gap-4 flex-wrap">
-        <WeatherIcon code={state.code} size={44} color="#fff" />
-        <Text className="font-display text-5xl text-white">
-          {Math.round(state.temp)}°{state.unit}
+    <View
+      className="rounded-[28px] p-6 mb-4 overflow-hidden"
+      style={{
+        backgroundColor: "rgba(16, 22, 15, 0.72)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.10)",
+      }}>
+      <View className="flex-row items-center justify-between mb-4">
+        <Text className="text-[#cdd8ce] text-sm font-body-medium" numberOfLines={1}>
+          {state.place}
         </Text>
-        <View>
-          <Text className="text-white">{state.desc}</Text>
-          <Text className="text-[#cdd8ce] text-sm">
-            Feels like {Math.round(state.feelsLike)}° · Wind {Math.round(state.wind)} {state.windUnit} · Humidity {state.humidity}%
-          </Text>
+        <View className="bg-white/10 rounded-full px-3 py-1">
+          <Text className="text-white text-xs font-body-bold">{state.desc}</Text>
         </View>
       </View>
-      {state.days.length > 0 && (
-        <View className="flex-row flex-wrap gap-2 mt-4">
-          {state.days.map((d, i) => (
-            <View key={i} className="items-center bg-white/5 border border-glass-border rounded-sm px-2 py-2 min-w-[76px]">
-              <Text className="text-ink font-body-bold text-xs">{d.label}</Text>
-              <View className="my-1.5">
-                <WeatherIcon code={d.code} size={24} color="#F2F5F1" />
-              </View>
-              <Text className="text-ink font-body-bold text-xs">
-                {Math.round(d.hi)}° <Text className="text-stone">/ {Math.round(d.lo)}°</Text>
-              </Text>
-              <View className="flex-row items-center gap-1 mt-0.5">
-                <Icon name="water" size={11} color="#6E8CA8" />
-                <Text className="text-slate text-[11px]">{d.rain}%</Text>
-              </View>
-            </View>
-          ))}
+
+      <View className="flex-row items-center gap-3">
+        <WeatherIcon code={state.code} size={52} color="#F2F5F1" />
+        <Text className="font-display text-white" style={{ fontSize: 64, lineHeight: 68 }}>
+          {Math.round(state.temp)}°
+        </Text>
+        <Text className="text-[#8fa693] text-lg self-start mt-2">{state.unit}</Text>
+      </View>
+
+      <View className="flex-row gap-2 mt-5">
+        <View className="flex-1 flex-row items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2.5">
+          <Icon name="water" size={14} color="#7BE88A" />
+          <View>
+            <Text className="text-white text-sm font-body-bold">{state.humidity}%</Text>
+            <Text className="text-[#8fa693] text-[10px]">Humidity</Text>
+          </View>
         </View>
-      )}
-    </Card>
+        <View className="flex-1 flex-row items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2.5">
+          <Icon name="wind" size={14} color="#7BE88A" />
+          <View>
+            <Text className="text-white text-sm font-body-bold">
+              {Math.round(state.wind)} {state.windUnit}
+            </Text>
+            <Text className="text-[#8fa693] text-[10px]">Wind</Text>
+          </View>
+        </View>
+        <View className="flex-1 flex-row items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-3.5 py-2.5">
+          <Icon name="thermometer" size={14} color="#7BE88A" />
+          <View>
+            <Text className="text-white text-sm font-body-bold">{Math.round(state.feelsLike)}°</Text>
+            <Text className="text-[#8fa693] text-[10px]">Feels like</Text>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -121,7 +141,7 @@ function PersonalStats({ campsites, trips }: { campsites: api.Campsite[]; trips:
     ["Photos attached", photos],
   ];
   return (
-    <Card>
+    <Card className="rounded-[28px]">
       <Text className="font-display text-lg text-ink mb-2">Your camping stats</Text>
       {rows.map(([label, value]) => (
         <View key={label} className="flex-row justify-between py-1.5 border-b border-line">
@@ -167,7 +187,7 @@ function SmartSuggestionsCard({ trip }: { trip: api.Trip | null }) {
   if (hidden || !trip || !suggestions) return null;
 
   return (
-    <Card className="border-lime-dim2">
+    <Card className="border-lime-dim2 rounded-[28px]">
       <Text className="font-display text-lg text-ink mb-2">Smart Suggestions</Text>
       {suggestions.map((s, i) => (
         <View key={i} className="flex-row gap-2.5 py-2 border-b border-line">
@@ -197,6 +217,8 @@ export default function DashboardScreen() {
   const [showRigSetup, setShowRigSetup] = useState(false);
   const [onboardingRig, setOnboardingRig] = useState<api.Rig>(EMPTY_RIG);
   const [savingRigSetup, setSavingRigSetup] = useState(false);
+  const [quickAddCoords, setQuickAddCoords] = useState<{ lat: string; lng: string } | null>(null);
+  const [savingLocation, setSavingLocation] = useState(false);
 
   // Rig onboarding runs once, before the tutorial, only for a genuinely new
   // account (existing accounts already have hasSeenTutorial = true).
@@ -257,8 +279,7 @@ export default function DashboardScreen() {
         const url =
           `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
           `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m` +
-          `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
-          `&temperature_unit=${tempParam}&wind_speed_unit=${windParam}&timezone=auto&forecast_days=7`;
+          `&temperature_unit=${tempParam}&wind_speed_unit=${windParam}&timezone=auto`;
         const res = await fetch(url);
         const w = await res.json();
         const cur = w.current;
@@ -271,16 +292,6 @@ export default function DashboardScreen() {
           const gj = await g.json();
           place = [gj.city || gj.locality, gj.principalSubdivision].filter(Boolean).join(", ") || place;
         } catch (_) {}
-        const days = w.daily.time.slice(0, 6).map((d: string, i: number) => {
-          const label = i === 0 ? "Today" : new Date(d + "T12:00").toLocaleDateString(undefined, { weekday: "short" });
-          return {
-            label,
-            code: w.daily.weather_code[i],
-            hi: w.daily.temperature_2m_max[i],
-            lo: w.daily.temperature_2m_min[i],
-            rain: w.daily.precipitation_probability_max[i],
-          };
-        });
         setWeather({
           status: "ready",
           place,
@@ -292,7 +303,6 @@ export default function DashboardScreen() {
           windUnit: unit === "C" ? "km/h" : "mph",
           humidity: cur.relative_humidity_2m,
           unit,
-          days,
         });
       } catch (e) {
         setWeather({ status: "error", message: "Couldn't reach the weather service. Check your connection and reload." });
@@ -300,22 +310,43 @@ export default function DashboardScreen() {
     })();
   }, []);
 
+  const loadDashboardData = useCallback(() => {
+    api.getTrips().then(setTrips).catch((e) => setTripsError(e.message));
+
+    Promise.all([api.getCampsites(), api.getTrips(), api.getMaintenance()])
+      .then(([campsitesRes, allTrips, maintenance]) => {
+        setCampsites(campsitesRes);
+        const past = allTrips.filter((t) => tripStatus(t) === "past").length;
+        setStats({ campsites: campsitesRes.length, past, upcoming: allTrips.length - past, maintenance: maintenance.length });
+      })
+      .catch((e) => setStatsError(e.message));
+  }, []);
+
   // Re-fetch every time this tab regains focus (not just on first mount) —
   // otherwise a trip created while on the Trips tab never appears here,
   // since Tabs screens stay mounted and a mount-only effect never reruns.
-  useFocusEffect(
-    useCallback(() => {
-      api.getTrips().then(setTrips).catch((e) => setTripsError(e.message));
+  useFocusEffect(loadDashboardData);
 
-      Promise.all([api.getCampsites(), api.getTrips(), api.getMaintenance()])
-        .then(([campsitesRes, allTrips, maintenance]) => {
-          setCampsites(campsitesRes);
-          const past = allTrips.filter((t) => tripStatus(t) === "past").length;
-          setStats({ campsites: campsitesRes.length, past, upcoming: allTrips.length - past, maintenance: maintenance.length });
-        })
-        .catch((e) => setStatsError(e.message));
-    }, [])
-  );
+  // "Save Current Location" quick action: grab a GPS fix, then hand it
+  // straight to the Add Campsite flow pre-filled — the same "add" path
+  // as the Campsites tab's own button, just started from a coordinate
+  // instead of a blank form. Mirrors useMyLocation() in CampsiteForm.
+  async function saveCurrentLocation() {
+    setSavingLocation(true);
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (perm.status !== "granted") {
+        toast("Couldn't get your location");
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({});
+      setQuickAddCoords({ lat: pos.coords.latitude.toFixed(5), lng: pos.coords.longitude.toFixed(5) });
+    } catch (_) {
+      toast("Couldn't get your location");
+    } finally {
+      setSavingLocation(false);
+    }
+  }
 
   const upcoming = (trips || []).filter((t) => tripStatus(t) !== "past").slice(0, 5);
   const soonestTrip = upcoming.length ? upcoming[0] : null;
@@ -327,11 +358,13 @@ export default function DashboardScreen() {
         {session?.firstName ? `Welcome back, ${session.firstName}` : "Dashboard"}
       </Text>
 
+      <View className="mb-4">
+        <Button title="Save Current Location" icon="location" onPress={saveCurrentLocation} loading={savingLocation} />
+      </View>
+
       <WeatherHero state={weather} />
 
-      {trips !== null && <SmartSuggestionsCard trip={soonestTrip} />}
-
-      <Card>
+      <Card className="rounded-[28px]">
         <Text className="font-display text-lg text-ink mb-2">Upcoming trips</Text>
         {tripsError ? (
           <Text className="text-danger text-sm">{tripsError}</Text>
@@ -374,6 +407,8 @@ export default function DashboardScreen() {
         )}
       </Card>
 
+      {trips !== null && <SmartSuggestionsCard trip={soonestTrip} />}
+
       <View className="flex-row flex-wrap gap-3 mb-4">
         {statsError ? (
           <Text className="text-danger text-sm">{statsError}</Text>
@@ -386,7 +421,7 @@ export default function DashboardScreen() {
             ["Trips planned", stats.upcoming],
             ["Maintenance records", stats.maintenance],
           ].map(([label, value]) => (
-            <View key={label as string} className="bg-surface border border-glass-border rounded-md p-4 flex-1 min-w-[45%]">
+            <View key={label as string} className="bg-surface border border-glass-border rounded-[28px] p-4 flex-1 min-w-[45%]">
               <Text className="font-display text-2xl text-ink">{value}</Text>
               <Text className="text-stone text-xs">{label}</Text>
             </View>
@@ -407,6 +442,17 @@ export default function DashboardScreen() {
     </FormModal>
 
     <TutorialModal visible={showTutorial} onFinish={finishTutorial} />
+
+    <CampsiteForm
+      visible={!!quickAddCoords}
+      site={null}
+      initialCoords={quickAddCoords || undefined}
+      onClose={() => setQuickAddCoords(null)}
+      onSaved={() => {
+        setQuickAddCoords(null);
+        loadDashboardData();
+      }}
+    />
     </SafeAreaView>
   );
 }
