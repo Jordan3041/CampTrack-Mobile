@@ -2,7 +2,7 @@
   "expo": {
     "name": "CampTrack",
     "slug": "CampTrack-Mobile",
-    "version": "1.4.0",
+    "version": "1.6.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "camptrackmobile",
@@ -10,15 +10,15 @@
     "backgroundColor": "#0E120F",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.CampTrack-Mobile",
-      "buildNumber": "6",
+      "bundleIdentifier": "com.CampTrackCampTrack-Mobile2026",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "CampTrack uses your location to show local weather, log campsite coordinates, and get directions.",
+        "NSLocationWhenInUseUsageDescription": "CampTrack uses your location to show nearby campsites, local weather conditions, and stream gauge data on the Explorer map, plus log campsite coordinates and get directions.",
         "NSPhotoLibraryUsageDescription": "CampTrack needs access to your photos so you can attach them to campsites.",
         "NSPhotoLibraryAddUsageDescription": "CampTrack can save photos you take of campsites."
       }
     },
     "android": {
+      "package": "org.camptrack.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#0E120F",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -52,7 +52,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "CampTrack uses your location to show local weather, log campsite coordinates, and get directions."
+          "locationWhenInUsePermission": "CampTrack uses your location to show nearby campsites, local weather conditions, and stream gauge data on the Explorer map, plus log campsite coordinates and get directions."
         }
       ],
       [
@@ -64,7 +64,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.371464052847-n0n5jrpt6vjc8jlu949iro3a42eooqe5"
+          "iosUrlScheme": "com.googleusercontent.apps.390290853694-43qktr99ptvofdnb32vlakstfcc0douv"
         }
       ],
       "expo-apple-authentication"
@@ -72,6 +72,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3ea1075a-a579-40bd-9f82-4fd0b6a76476"
+      }
+    },
+    "owner": "jordan3041"
   }
 }
